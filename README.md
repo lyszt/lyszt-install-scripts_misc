@@ -43,7 +43,7 @@ sh install.sh <tool> [--version <tag>] [--install-dir <dir>]
 
 ## Mirroring
 
-Changes land on LYSZT first and are mirrored here. PRs are welcome, both to change the existing scripts and to add new tools — the installer is built to take a new tool by adding its repository, asset patterns, and install steps. If you find a bug (an asset pattern that misses your distro, a Java detection case), open an issue or PR against this mirror and it will be reviewed and shipped through the site. Keep the scripts POSIX `sh` and dependency-free.
+Changes land on LYSZT first and are mirrored here. PRs are welcome, both to change the existing scripts and to add new tools. If you find a bug (an asset pattern that misses your distro, a Java detection case), open an issue or PR against this mirror and it will be reviewed and shipped through the site. Keep the scripts POSIX `sh` and dependency-free.
 
 ## License
 
