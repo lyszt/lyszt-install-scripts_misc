@@ -2,16 +2,7 @@
 
 Public mirror of the installer scripts used by [LYSZT](https://lyszt.net).
 
-The canonical installer experience lives on the LYSZT website: each RISC-V tool's ecosystem page (for example [Ripes](https://lyszt.net/en/academia/resources/riscv/ecosystem/ripes)) and its download dialog serve the one-line install commands and the scripts themselves. This repository exists so those scripts are open, auditable, and versioned — you can read exactly what runs on your machine before you pipe it to `sh`.
-
-This is not an independent project. Nothing here is installed or distributed directly from this repository; the code mirrors what LYSZT serves.
-
-## Supported tools
-
-- **Ripes** — graphical RISC-V computer architecture simulator
-- **RARS** — RISC-V Assembler and Runtime Simulator (requires Java 17+)
-
-To install either one, use the command published on the tool's page at lyszt.net. Windows users can use the download dialog on the same pages.
+This is not an independent project. Nothing here is installed or distributed directly from this repository. The code mirrors what LYSZT serves.
 
 ## What the installer does
 
@@ -52,7 +43,7 @@ sh install.sh <tool> [--version <tag>] [--install-dir <dir>]
 
 ## Mirroring
 
-Changes land on LYSZT first and are mirrored here. PRs are welcome, both to change the existing scripts and to add new tools — the installer is built to take a new tool by adding its repository, asset patterns, and install steps. If you find a bug (an asset pattern that misses your distro, a Java detection case), open an issue or PR against this mirror and it will be reviewed and shipped through the site. Keep the scripts POSIX `sh` and dependency-free.
+Changes land on LYSZT first and are mirrored here. PRs are welcome, both to change the existing scripts and to add new tools. If you find a bug (an asset pattern that misses your distro, a Java detection case), open an issue or PR against this mirror and it will be reviewed and shipped through the site. Keep the scripts POSIX `sh` and dependency-free.
 
 ## License
 
