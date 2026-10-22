@@ -91,6 +91,61 @@ sha256_of() {
   fi
 }
 
+# Prints the distribution ID and ID_LIKE tokens from /etc/os-release
+# (e.g. "ubuntu debian" on Ubuntu, "arch" on Arch). Empty on macOS.
+distro_tokens() {
+  for field in ID ID_LIKE; do
+    grep -s "^${field}=" /etc/os-release | cut -d= -f2- | tr -d '"' | tr ' ' '\n'
+  done
+}
+
+# Exact package name for AppImage FUSE support per distribution.
+fuse_hint() {
+  for token in $(distro_tokens); do
+    case "$token" in
+      ubuntu) printf 'sudo apt install libfuse2 (Ubuntu 24.04+: libfuse2t64)'; return 0 ;;
+      debian) printf 'sudo apt install libfuse2'; return 0 ;;
+      fedora) printf 'sudo dnf install fuse-libs'; return 0 ;;
+      arch|archarm) printf 'sudo pacman -S fuse2'; return 0 ;;
+      opensuse|suse) printf 'sudo zypper install fuse'; return 0 ;;
+    esac
+  done
+  printf 'install the fuse2 package for your distribution'
+}
+
+# Java 17 install command per distribution (Linux only).
+java_hint() {
+  for token in $(distro_tokens); do
+    case "$token" in
+      ubuntu|debian) printf 'sudo apt install openjdk-17-jre'; return 0 ;;
+      fedora) printf 'sudo dnf install java-17-openjdk'; return 0 ;;
+      arch|archarm) printf 'sudo pacman -S jre-openjdk'; return 0 ;;
+      opensuse|suse) printf 'sudo zypper install java-17-openjdk'; return 0 ;;
+      rhel|centos|rocky|alma) printf 'sudo dnf install java-17-openjdk'; return 0 ;;
+    esac
+  done
+  printf 'install a Java 17+ JRE for your distribution'
+}
+
+# Registers a graphical launcher so the tool shows up in the applications menu.
+# write_desktop_entry <id> <name> <exec-path> <comment>
+write_desktop_entry() {
+  entry_id="$1"; entry_name="$2"; entry_exec="$3"; entry_comment="$4"
+  apps_dir="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+  mkdir -p "$apps_dir"
+  printf '%s\n' \
+    "[Desktop Entry]" \
+    "Type=Application" \
+    "Name=${entry_name}" \
+    "Exec=\"${entry_exec}\"" \
+    "Terminal=false" \
+    "Categories=Education;Science;" \
+    "Comment=${entry_comment}" > "${apps_dir}/${entry_id}.desktop"
+  if have_cmd update-desktop-database; then
+    update-desktop-database "${apps_dir}" >/dev/null 2>&1 || true
+  fi
+}
+
 # ---------------------------------------------------------------------------
 # release resolution
 # ---------------------------------------------------------------------------
@@ -170,10 +225,11 @@ install_ripes() {
       mkdir -p "$dir"
       mv "$file" "$dir/ripes"
       chmod +x "$dir/ripes"
+      write_desktop_entry ripes "Ripes" "${dir}/ripes" "RISC-V processor simulator"
       info "installed ripes ${tag} -> ${dir}/ripes"
       info "run it with: ${dir}/ripes"
       if ! have_cmd fusermount && ! have_cmd fusermount3 && ! [ -e /dev/fuse ]; then
-        warn "AppImages need FUSE. If ripes fails to start, install 'libfuse2' (or run with --appimage-extract-and-run)."
+        warn "AppImages need FUSE. If ripes fails to start, run: $(fuse_hint)"
       fi
       ;;
     darwin)
@@ -204,13 +260,22 @@ install_rars() {
 exec java -jar "\$(dirname "\$0")/rars.jar" "\$@"
 LAUNCHER
   chmod +x "$dir/rars"
+  write_desktop_entry rars "RARS" "${dir}/rars" "RISC-V Assembler and Runtime Simulator"
   info "installed rars ${tag} -> ${dir}/rars (jar: ${dir}/rars.jar)"
   if ! have_cmd java; then
-    warn "java was not found in PATH. RARS requires Java 17 or newer. Install it with:"
-    case "$(uname -s)" in
-      Linux)  warn "  sudo apt install openjdk-17-jre   (Debian/Ubuntu) or your distro equivalent" ;;
-      Darwin) warn "  brew install openjdk@17            (macOS)" ;;
-    esac
+    warn "java was not found in PATH. RARS requires Java 8 or newer."
+    if [ "$(uname -s)" = "Darwin" ]; then
+      warn "  brew install openjdk@17            (macOS)"
+    else
+      warn "  $(java_hint)"
+    fi
+  fi
+  if [ "$(uname -s)" != "Darwin" ]; then
+    if have_cmd flatpak; then
+      info "RARS is also on Flathub: flatpak install flathub io.github.TheThirdOne.rars"
+    else
+      info "RARS is also on Flathub: https://flathub.org/apps/io.github.TheThirdOne.rars"
+    fi
   fi
   info "run it with: ${dir}/rars"
 }
